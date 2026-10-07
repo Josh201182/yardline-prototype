@@ -149,13 +149,20 @@
     <div id="mediaShots" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;"></div>
     <button class="btn gold" id="addPhoto">Upload photo</button>
     <button class="btn ghost" id="addVideo" style="margin-top:8px;">Upload video</button>
-    <button class="btn cream" id="skipMedia" style="margin-top:8px;">Done, open checklist</button>
+    <button class="btn cream" id="skipMedia" style="margin-top:8px;">Done, choose checklist</button>
+  </section>
+
+  <section class="screen" id="screenForms">
+    <p class="kicker">Dryer service category</p>
+    <h1>Which checklist?</h1>
+    <p class="sub">More forms can be added here as categories get written. The verbal report is already saved.</p>
+    <div id="formPicker"></div>
   </section>
 
   <section class="screen" id="screenCheck">
-    <p class="kicker">After the verbal report</p>
-    <h1>Shivvers pre-season checklist</h1>
-    <p class="sub">Same items as the Jotform. Tap each line to mark pass. Fail stays open for the parts form.</p>
+    <p class="kicker" id="checkKicker">Checklist</p>
+    <h1 id="checkTitle">Checklist</h1>
+    <p class="sub" id="checkSub"></p>
     <div id="checkList"></div>
     <button class="btn gold" id="submitCheck">Submit checklist and save report</button>
   </section>
@@ -212,24 +219,44 @@ const sites = [
   { id: "olson", name: "Olson Site", town: "Baudette", miles: 28, account: "C-2210" }
 ];
 const memo = "I'm at Nelson's, dryer and the wet auger. GSI 2426: burner lights then drops out, valve wet at the union. Cleaned the orifice and taped it so he can finish this batch. Needs a gas valve and thermocouple. Brock 10-inch auger: flighting thin at the boot, still moving grain. Don't replace today. Order flighting and come back after harvest. Hour and a half on site.";
-const checks = [
-  ["Unit", "Circu-Lator II · serial and bin number on the report"],
-  ["Safety", "Lockout / tagout confirmed"],
-  ["Mechanical", "Fasteners tight · flighting · center tube · spider wheel · sweep clearance"],
-  ["Mechanical", "Sweep torque 36–40 ft-lbs · coupler greased C-6188 only"],
-  ["Gearbox", "Housing type confirmed · grease not mixed · top, middle, bottom flushed"],
-  ["Gearbox", "Bearing fittings 3–4 pumps · vents clear · no new leaks after run"],
-  ["Electrical", "Connections tight · wiring damage · overloads · grounds · high-limit tested"],
-  ["Blue Flame", "Gas locked out · blades · soap-tested joints · flame lockout under 4 seconds"],
-  ["Blue Flame", "Flame rod clean · high-limit 220 F · damper and shutoff work"],
-  ["Level-Dry", "Cables · E-6127 high limit · slack switch · augers · raise/lower cycle"],
-  ["Controls", "CompuDry display · plenum sensor · high-temp alarm · e-stop · auto cycle"],
-  ["Sign-off", "Unit condition and technician signature"]
+const formLibrary = [
+  { id: "preseason", name: "Shivvers pre-season inspection", source: "Jotform 261475469793070", items: [
+    ["Unit", "Circu-Lator II · serial and bin number on the report"],
+    ["Safety", "Lockout / tagout confirmed"],
+    ["Mechanical", "Fasteners tight · flighting · center tube · spider wheel · sweep clearance"],
+    ["Mechanical", "Sweep torque 36–40 ft-lbs · coupler greased C-6188 only"],
+    ["Gearbox", "Housing type confirmed · grease not mixed · top, middle, bottom flushed"],
+    ["Gearbox", "Bearing fittings 3–4 pumps · vents clear · no new leaks after run"],
+    ["Electrical", "Connections tight · wiring damage · overloads · grounds · high-limit tested"],
+    ["Blue Flame", "Gas locked out · blades · soap-tested joints · flame lockout under 4 seconds"],
+    ["Blue Flame", "Flame rod clean · high-limit 220 F · damper and shutoff work"],
+    ["Level-Dry", "Cables · E-6127 high limit · slack switch · augers · raise/lower cycle"],
+    ["Controls", "CompuDry display · plenum sensor · high-temp alarm · e-stop · auto cycle"],
+    ["Sign-off", "Unit condition and technician signature"]
+  ] },
+  { id: "completion", name: "Shivvers dryer service completion", source: "Jotform 260973722500050", items: [
+    ["Safety", "Power locked out at the main panel, and kept locked out"],
+    ["Safety", "Bin clear of personnel before re-energizing"],
+    ["Guards", "All safety guards in place"],
+    ["Sweep", "Tapered sweep wear: flight, taper, flippers, wheel"],
+    ["Sweep", "Coupling flex consistent, 6 in free travel, bolts replaced if worn"],
+    ["Gearbox", "No play between shaft and side cap"],
+    ["Gearbox", "Correct grease for housing color. Zerks counted and lubricated"],
+    ["Pickup", "Finger clearance 3/8 to 5/8 in above spider, 1/2 to 1 in at cone"],
+    ["Cone", "Not worn through. Do not patch"],
+    ["Flighting", "Continuous-flow and center-vertical flighting inspected"],
+    ["Unload", "Horizontal and vertical unload bearings lubricated"],
+    ["Belts", "Drive belts tension and wear checked"],
+    ["Electrical", "Decals, contactors, and automatic controls with no error codes"],
+    ["Burner", "Intake clear, gas leak test, hi/lo fire, no-flame lockout"],
+    ["Close", "Replacement priority set and lubrication summary answered"]
+  ] }
 ];
+let activeForm = formLibrary[0];
 let state = {
   shift: false, siteId: null, recording: false, seconds: 0, timer: null, sent: false, passed: {},
   reports: [
-    { id: "r-old", site: "Hedlund Yard", account: "C-0881", date: "Sep 12", summary: "Sukup dryer pre-season. Limit switch ordered.", passed: 11, total: 12 }
+    { id: "r-old", site: "Hedlund Yard", account: "C-0881", date: "Sep 12", form: "Shivvers pre-season inspection", summary: "Sukup dryer pre-season. Limit switch ordered.", passed: 11, total: 12 }
   ],
   lines: [
     { id: "seed1", kind: "Parts", site: "Hedlund Yard", machine: "Sukup dryer", words: "Upper level limit switch cracked.", status: "ack", eta: "Thursday", img: "imagine_images/HHW3C.jpg" }
@@ -239,7 +266,7 @@ const $ = (id) => document.getElementById(id);
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2200); }
 function show(name) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  $({ sites: "screenSites", visit: "screenVisit", media: "screenMedia", check: "screenCheck", office: "screenOffice", detail: "screenOfficeDetail", farmer: "screenFarmer" }[name] || "screenHome").classList.add("active");
+  $({ sites: "screenSites", visit: "screenVisit", media: "screenMedia", forms: "screenForms", check: "screenCheck", office: "screenOffice", detail: "screenOfficeDetail", farmer: "screenFarmer" }[name] || "screenHome").classList.add("active");
 }
 function setRole(role) {
   document.body.classList.remove("office", "farmer");
@@ -289,16 +316,25 @@ function stopRec() {
 }
 function finishMedia() {
   $("netLabel").textContent = "Checklist";
+  $("formPicker").innerHTML = formLibrary.map(f => `<button class="site" data-form="${f.id}"><div><b>${f.name}</b><span>${f.source} · ${f.items.length} items</span></div></button>`).join("");
+  show("forms");
+}
+function openForm(id) {
+  activeForm = formLibrary.find(f => f.id === id) || formLibrary[0];
+  state.passed = {};
+  $("checkKicker").textContent = activeForm.source;
+  $("checkTitle").textContent = activeForm.name;
+  $("checkSub").textContent = "Tap a line for pass. Leave it open if it failed. Another dryer category is another form in this list.";
   renderChecks();
   show("check");
 }
 function renderChecks() {
-  $("checkList").innerHTML = checks.map((c, i) => `<button class="check ${state.passed[i] ? "on" : ""}" data-check="${i}"><b>${c[0]}</b><small>${c[1]}</small></button>`).join("");
+  $("checkList").innerHTML = activeForm.items.map((c, i) => `<button class="check ${state.passed[i] ? "on" : ""}" data-check="${i}"><b>${c[0]}</b><small>${c[1]}</small></button>`).join("");
 }
 function saveReport() {
   const site = sites.find(s => s.id === state.siteId) || sites[0];
   const passed = Object.keys(state.passed).length;
-  state.reports.unshift({ id: "r" + Date.now(), site: site.name, account: site.account, date: "Oct 7", summary: "Verbal memo plus Shivvers checklist. Dryer valve and auger flighting on the parts form.", passed, total: checks.length });
+  state.reports.unshift({ id: "r" + Date.now(), site: site.name, account: site.account, date: "Oct 7", form: activeForm.name, summary: "Verbal memo plus " + activeForm.name + ". Dryer valve and auger flighting on the parts form.", passed, total: activeForm.items.length });
   buildReport();
   sendForms();
   toast("Report saved to the company file and the customer account.");
@@ -332,7 +368,7 @@ function sendForms() {
   $("sendReport").classList.add("hidden");
 }
 function renderQueue() {
-  $("reportArchive").innerHTML = state.reports.map(r => `<button class="q" data-report="${r.id}"><div class="row"><b>${r.site}</b><span class="badge">Saved</span></div><span>${r.date} · ${r.account} · checklist ${r.passed}/${r.total} · ${r.summary}</span></button>`).join("");
+  $("reportArchive").innerHTML = state.reports.map(r => `<button class="q" data-report="${r.id}"><div class="row"><b>${r.site}</b><span class="badge">Saved</span></div><span>${r.date} · ${r.form || "Report"} · checklist ${r.passed}/${r.total} · ${r.summary}</span></button>`).join("");
   $("queue").innerHTML = state.lines.map(l => `<button class="q" data-line="${l.id}"><div class="row"><b>${l.kind} · ${l.site}</b><span class="badge ${l.status}">${l.status}</span></div><span>${l.machine} · ${l.words}</span></button>`).join("");
 }
 function renderFarmer() {
@@ -373,6 +409,10 @@ $("addVideo").onclick = () => {
   toast("Video attached. It uploads with the memo.");
 };
 $("skipMedia").onclick = finishMedia;
+$("formPicker").onclick = (e) => {
+  const btn = e.target.closest("[data-form]");
+  if (btn) openForm(btn.dataset.form);
+};
 $("checkList").onclick = (e) => {
   const btn = e.target.closest("[data-check]");
   if (!btn) return;
