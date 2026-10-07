@@ -170,6 +170,18 @@
     <div id="farmerBody"><p class="note">Nothing sent yet. Record a visit on the Tech tab.</p></div>
   </section>
 
+  <div class="sheet" id="mediaSheet">
+    <div class="panel">
+      <div class="handle"></div>
+      <p class="kicker">Recording saved</p>
+      <h2>Add pictures or video of the site?</h2>
+      <p>Nameplate, the failed part, a walk-around. Optional, but the forms go out cleaner with them.</p>
+      <div id="mediaShots" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;"></div>
+      <button class="btn gold" id="addPhoto">Upload photo</button>
+      <button class="btn ghost" id="addVideo" style="margin-top:8px;color:#101610;border-color:#d5ddcc;">Upload video</button>
+      <button class="btn ghost" id="skipMedia" style="margin-top:8px;color:#101610;border-color:#d5ddcc;">Done, fill the forms</button>
+    </div>
+  </div>
   <div class="sheet" id="arriveSheet">
     <div class="panel">
       <div class="handle"></div>
@@ -244,9 +256,16 @@ function stopRec() {
   $("recBtn").classList.add("hidden");
   $("wave").classList.add("hidden");
   $("shiftDot").className = "dot on";
+  $("netLabel").textContent = "Memo saved";
+  $("recHint").textContent = "Recording is on the phone. Add site photos or video before the forms fill.";
+  $("mediaShots").innerHTML = "";
+  $("mediaSheet").classList.add("open");
+}
+function finishMedia() {
+  $("mediaSheet").classList.remove("open");
   $("netLabel").textContent = "Processing";
   $("recHint").textContent = "Reading the memo and splitting it by machine.";
-  setTimeout(buildReport, 1200);
+  setTimeout(buildReport, 900);
 }
 function buildReport() {
   const site = sites.find(s => s.id === state.siteId);
@@ -303,6 +322,15 @@ $("siteList").onclick = (e) => {
 $("confirmArrive").onclick = () => { openVisit($("arriveSheet").dataset.site || "nelson"); startRec(); };
 $("dismissArrive").onclick = () => $("arriveSheet").classList.remove("open");
 $("recBtn").onclick = () => state.recording ? stopRec() : startRec();
+$("addPhoto").onclick = () => {
+  $("mediaShots").insertAdjacentHTML("beforeend", `<img src="imagine_images/HHW3C.jpg" alt="Site photo" style="height:92px;width:100%;object-fit:cover;border-radius:10px;" />`);
+  toast("Photo attached to this visit.");
+};
+$("addVideo").onclick = () => {
+  $("mediaShots").insertAdjacentHTML("beforeend", `<div style="height:92px;border-radius:10px;background:#1c241c;color:#eef3e8;display:flex;align-items:center;justify-content:center;font-size:13px;">Walk-around · 0:12</div>`);
+  toast("Video attached. It uploads with the memo.");
+};
+$("skipMedia").onclick = finishMedia;
 $("typeInstead").onclick = () => $("typeNote").classList.toggle("hidden");
 $("sendReport").onclick = sendForms;
 $("leaveVisit").onclick = () => show("sites");
