@@ -360,11 +360,11 @@ function sendForms() {
   const site = sites.find(s => s.id === state.siteId);
   state.sent = true;
   state.lines.unshift(
-    { id: "p1", kind: "Parts", site: site.name, machine: "GSI 2426 dryer", words: "Gas valve and thermocouple. Burner drops out.", status: "new", eta: "", img: "imagine_images/HHW3C.jpg" },
-    { id: "p2", kind: "Parts", site: site.name, machine: "Brock 10-inch wet auger", words: "Flighting at the boot. Return after harvest.", status: "new", eta: "", img: "imagine_images/Hbq61.jpg" },
+    { id: "p1", kind: "Website order", site: site.name, machine: "GSI 2426 dryer", words: "Thermocouple · matched site SKU · in stock · draft order D-441", status: "ordered", eta: "Ships from Warroad", img: "imagine_images/HHW3C.jpg" },
+    { id: "p2", kind: "Purchasing queue", site: site.name, machine: "Brock 10-inch wet auger", words: "Boot flighting · not on the website · queued, not ordered", status: "new", eta: "Needs a vendor", img: "imagine_images/Hbq61.jpg" },
     { id: "b1", kind: "Billing", site: site.name, machine: "Visit", words: "1.5 hours · Erik Larson · " + site.account, status: "bill", eta: "", img: "imagine_images/nscPX.jpg" }
   );
-  toast("Parts form to fulfillment. Billing form to the office.");
+  toast("In-stock part reserved on the website. Missing part queued, not ordered.");
   $("sendReport").classList.add("hidden");
 }
 function renderQueue() {
