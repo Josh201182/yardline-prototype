@@ -67,7 +67,9 @@
   .type-link { background: none; border: 0; color: var(--gold-2); font-size: 13px; padding: 8px; }
   textarea { width: 100%; background: #0c120c; color: var(--cream); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; }
   .hidden { display: none; }
-  .equip { border-left: 3px solid var(--gold); padding: 8px 10px; margin: 8px 0; background: #121a12; border-radius: 0 12px 12px 0; }
+  .check { width: 100%; text-align: left; background: #121a12; color: var(--cream); border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 6px; }
+  .check.on { border-color: #7ea36a; }
+  .check small { display: block; color: var(--sage); }
   .toast { position: absolute; left: 14px; right: 14px; bottom: 16px; background: var(--cream); color: var(--ink); border-radius: 12px; padding: 10px 12px; display: none; z-index: 6; }
   .toast.show { display: block; }
   .sheet { position: absolute; inset: 0; background: rgba(8,10,8,.62); display: none; align-items: flex-end; z-index: 5; }
@@ -147,11 +149,22 @@
     <div id="mediaShots" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;"></div>
     <button class="btn gold" id="addPhoto">Upload photo</button>
     <button class="btn ghost" id="addVideo" style="margin-top:8px;">Upload video</button>
-    <button class="btn cream" id="skipMedia" style="margin-top:8px;">Done, fill the forms</button>
+    <button class="btn cream" id="skipMedia" style="margin-top:8px;">Done, open checklist</button>
   </section>
+
+  <section class="screen" id="screenCheck">
+    <p class="kicker">After the verbal report</p>
+    <h1>Shivvers pre-season checklist</h1>
+    <p class="sub">Same items as the Jotform. Tap each line to mark pass. Fail stays open for the parts form.</p>
+    <div id="checkList"></div>
+    <button class="btn gold" id="submitCheck">Submit checklist and save report</button>
+  </section>
+  <section class="screen" id="screenOffice">
     <p class="kicker">Office</p>
-    <h1>Forms from the recording</h1>
-    <p class="sub">One memo becomes a parts form and a billing form. Correct the transcript before the farmer sees it.</p>
+    <h1>Saved service reports</h1>
+    <p class="sub">Every submitted visit stays here. Open a report for the memo, checklist, parts, and hours.</p>
+    <div id="reportArchive"></div>
+    <p class="kicker">Open forms</p>
     <div id="queue"></div>
   </section>
 
@@ -174,23 +187,12 @@
   <section class="screen" id="screenFarmer">
     <p class="kicker">Customer link</p>
     <h1>Nelson Farm</h1>
-    <p class="sub">What the recording said about his yard. No prices.</p>
+    <p class="sub">Saved service reports for this account. No prices.</p>
+    <div id="farmerReports"></div>
     <img src="imagine_images/nscPX.jpg" alt="Yard" style="height:170px;width:100%;object-fit:cover;border-radius:16px;margin-bottom:10px;" />
     <div id="farmerBody"><p class="note">Nothing sent yet. Record a visit on the Tech tab.</p></div>
   </section>
 
-  <div class="sheet" id="mediaSheet">
-    <div class="panel">
-      <div class="handle"></div>
-      <p class="kicker">Recording saved</p>
-      <h2>Add pictures or video of the site?</h2>
-      <p>Nameplate, the failed part, a walk-around. Optional, but the forms go out cleaner with them.</p>
-      <div id="mediaShots" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;"></div>
-      <button class="btn gold" id="addPhoto">Upload photo</button>
-      <button class="btn ghost" id="addVideo" style="margin-top:8px;color:#101610;border-color:#d5ddcc;">Upload video</button>
-      <button class="btn ghost" id="skipMedia" style="margin-top:8px;color:#101610;border-color:#d5ddcc;">Done, fill the forms</button>
-    </div>
-  </div>
   <div class="sheet" id="arriveSheet">
     <div class="panel">
       <div class="handle"></div>
@@ -210,8 +212,25 @@ const sites = [
   { id: "olson", name: "Olson Site", town: "Baudette", miles: 28, account: "C-2210" }
 ];
 const memo = "I'm at Nelson's, dryer and the wet auger. GSI 2426: burner lights then drops out, valve wet at the union. Cleaned the orifice and taped it so he can finish this batch. Needs a gas valve and thermocouple. Brock 10-inch auger: flighting thin at the boot, still moving grain. Don't replace today. Order flighting and come back after harvest. Hour and a half on site.";
+const checks = [
+  ["Unit", "Circu-Lator II · serial and bin number on the report"],
+  ["Safety", "Lockout / tagout confirmed"],
+  ["Mechanical", "Fasteners tight · flighting · center tube · spider wheel · sweep clearance"],
+  ["Mechanical", "Sweep torque 36–40 ft-lbs · coupler greased C-6188 only"],
+  ["Gearbox", "Housing type confirmed · grease not mixed · top, middle, bottom flushed"],
+  ["Gearbox", "Bearing fittings 3–4 pumps · vents clear · no new leaks after run"],
+  ["Electrical", "Connections tight · wiring damage · overloads · grounds · high-limit tested"],
+  ["Blue Flame", "Gas locked out · blades · soap-tested joints · flame lockout under 4 seconds"],
+  ["Blue Flame", "Flame rod clean · high-limit 220 F · damper and shutoff work"],
+  ["Level-Dry", "Cables · E-6127 high limit · slack switch · augers · raise/lower cycle"],
+  ["Controls", "CompuDry display · plenum sensor · high-temp alarm · e-stop · auto cycle"],
+  ["Sign-off", "Unit condition and technician signature"]
+];
 let state = {
-  shift: false, siteId: null, recording: false, seconds: 0, timer: null, sent: false,
+  shift: false, siteId: null, recording: false, seconds: 0, timer: null, sent: false, passed: {},
+  reports: [
+    { id: "r-old", site: "Hedlund Yard", account: "C-0881", date: "Sep 12", summary: "Sukup dryer pre-season. Limit switch ordered.", passed: 11, total: 12 }
+  ],
   lines: [
     { id: "seed1", kind: "Parts", site: "Hedlund Yard", machine: "Sukup dryer", words: "Upper level limit switch cracked.", status: "ack", eta: "Thursday", img: "imagine_images/HHW3C.jpg" }
   ]
@@ -220,7 +239,7 @@ const $ = (id) => document.getElementById(id);
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2200); }
 function show(name) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  $({ sites: "screenSites", visit: "screenVisit", media: "screenMedia", office: "screenOffice", detail: "screenOfficeDetail", farmer: "screenFarmer" }[name] || "screenHome").classList.add("active");
+  $({ sites: "screenSites", visit: "screenVisit", media: "screenMedia", check: "screenCheck", office: "screenOffice", detail: "screenOfficeDetail", farmer: "screenFarmer" }[name] || "screenHome").classList.add("active");
 }
 function setRole(role) {
   document.body.classList.remove("office", "farmer");
@@ -269,10 +288,22 @@ function stopRec() {
   show("media");
 }
 function finishMedia() {
-  $("netLabel").textContent = "Processing";
-  show("visit");
-  $("recHint").textContent = "Reading the memo and splitting it by machine.";
-  setTimeout(buildReport, 700);
+  $("netLabel").textContent = "Checklist";
+  renderChecks();
+  show("check");
+}
+function renderChecks() {
+  $("checkList").innerHTML = checks.map((c, i) => `<button class="check ${state.passed[i] ? "on" : ""}" data-check="${i}"><b>${c[0]}</b><small>${c[1]}</small></button>`).join("");
+}
+function saveReport() {
+  const site = sites.find(s => s.id === state.siteId) || sites[0];
+  const passed = Object.keys(state.passed).length;
+  state.reports.unshift({ id: "r" + Date.now(), site: site.name, account: site.account, date: "Oct 7", summary: "Verbal memo plus Shivvers checklist. Dryer valve and auger flighting on the parts form.", passed, total: checks.length });
+  buildReport();
+  sendForms();
+  toast("Report saved to the company file and the customer account.");
+  show("office");
+  renderQueue();
 }
 function buildReport() {
   const site = sites.find(s => s.id === state.siteId);
@@ -301,11 +332,14 @@ function sendForms() {
   $("sendReport").classList.add("hidden");
 }
 function renderQueue() {
+  $("reportArchive").innerHTML = state.reports.map(r => `<button class="q" data-report="${r.id}"><div class="row"><b>${r.site}</b><span class="badge">Saved</span></div><span>${r.date} · ${r.account} · checklist ${r.passed}/${r.total} · ${r.summary}</span></button>`).join("");
   $("queue").innerHTML = state.lines.map(l => `<button class="q" data-line="${l.id}"><div class="row"><b>${l.kind} · ${l.site}</b><span class="badge ${l.status}">${l.status}</span></div><span>${l.machine} · ${l.words}</span></button>`).join("");
 }
 function renderFarmer() {
+  const reports = state.reports.filter(r => r.site === "Nelson Farm" || r.account === "C-1044");
   const lines = state.lines.filter(l => l.site === "Nelson Farm" && l.kind === "Parts");
-  $("farmerBody").innerHTML = lines.length ? lines.map(l => `<div class="card" style="background:white;color:#101610;border-color:#d5ddcc;"><div class="row"><b>${l.machine}</b><span class="badge ${l.status}">${l.status}</span></div><p>${l.words}</p></div>`).join("") + `<p class="note">Hours are on the billing form. They are not shown here.</p>` : `<p class="note">Nothing sent yet. Record a visit on the Tech tab.</p>`;
+  $("farmerReports").innerHTML = reports.length ? reports.map(r => `<div class="card" style="background:white;color:#101610;border-color:#d5ddcc;"><b>${r.date} service report</b><p>${r.summary}</p><p class="note">${r.account} · checklist ${r.passed}/${r.total}</p></div>`).join("") : `<p class="note">No saved reports on this account yet.</p>`;
+  $("farmerBody").innerHTML = lines.length ? lines.map(l => `<div class="card" style="background:white;color:#101610;border-color:#d5ddcc;"><div class="row"><b>${l.machine}</b><span class="badge ${l.status}">${l.status}</span></div><p>${l.words}</p></div>`).join("") : "";
 }
 $("startShift").onclick = () => {
   state.shift = true;
@@ -339,6 +373,13 @@ $("addVideo").onclick = () => {
   toast("Video attached. It uploads with the memo.");
 };
 $("skipMedia").onclick = finishMedia;
+$("checkList").onclick = (e) => {
+  const btn = e.target.closest("[data-check]");
+  if (!btn) return;
+  state.passed[btn.dataset.check] = !state.passed[btn.dataset.check];
+  renderChecks();
+};
+$("submitCheck").onclick = saveReport;
 $("typeInstead").onclick = () => $("typeNote").classList.toggle("hidden");
 $("sendReport").onclick = sendForms;
 $("leaveVisit").onclick = () => show("sites");
