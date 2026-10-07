@@ -5,886 +5,328 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Yardline — field closeout prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@380;460;560;640&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@460;560;640&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --ink: #101610;
-    --ink-2: #1c241c;
-    --panel: #182017;
-    --line: rgba(238, 243, 232, 0.12);
-    --cream: #eef3e8;
-    --cream-2: #e4ebdc;
-    --gold: #c9972a;
-    --gold-2: #e2b85a;
-    --sage: #8fa38c;
-    --danger: #c4563a;
-    --ok: #7ea36a;
-    --shadow: 0 18px 50px rgba(16, 22, 16, 0.28);
-    --sans: "Outfit", system-ui, sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --ink: #101610; --panel: #182017; --line: rgba(238,243,232,.12);
+    --cream: #eef3e8; --gold: #c9972a; --gold-2: #e2b85a; --sage: #8fa38c;
+    --sans: "Outfit", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    font-family: var(--sans);
-    background:
-      radial-gradient(900px 420px at 10% -10%, rgba(201, 151, 42, 0.16), transparent 50%),
-      linear-gradient(180deg, #d7dfd0 0%, #c5cfc0 100%);
-    color: var(--ink);
-    min-height: 100dvh;
-  }
-  button, input, textarea, select { font-family: inherit; }
-  button { cursor: pointer; }
+  html, body { margin: 0; }
+  body { font-family: var(--sans); background: linear-gradient(180deg, #d7dfd0, #c5cfc0); color: var(--ink); min-height: 100dvh; }
+  button, textarea { font-family: inherit; cursor: pointer; }
   img { max-width: 100%; display: block; }
-
-  .shell {
-    max-width: 430px;
-    margin: 0 auto;
-    min-height: 100dvh;
-    background: var(--ink);
-    color: var(--cream);
-    position: relative;
-    box-shadow: var(--shadow);
-  }
-  @media (min-width: 860px) {
-    body { padding: 28px 20px 40px; }
-    .shell {
-      min-height: 844px;
-      border-radius: 28px;
-      overflow: hidden;
-      border: 1px solid rgba(16, 22, 16, 0.4);
-    }
-  }
-
-  .statusbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 16px 0;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    color: var(--sage);
-  }
-  .shift-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 3px 8px;
-    color: var(--gold-2);
-  }
-  .dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--sage);
-  }
-  .dot.on { background: #d7e38a; box-shadow: 0 0 0 3px rgba(215, 227, 138, 0.18); }
-  .dot.off { background: #6d6658; }
-
-  .switcher {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 4px;
-    margin: 10px 14px 0;
-    padding: 4px;
-    background: #0c120c;
-    border-radius: 12px;
-  }
-  .switcher button {
-    border: 0;
-    background: transparent;
-    color: var(--sage);
-    border-radius: 9px;
-    padding: 8px 4px;
-    font-size: 13px;
-    font-weight: 560;
-  }
-  .switcher button.active {
-    background: var(--cream);
-    color: var(--ink);
-  }
-
-  .screen { display: none; padding: 14px 14px 28px; }
+  .shell { max-width: 430px; margin: 0 auto; min-height: 100dvh; background: var(--ink); color: var(--cream); position: relative; }
+  @media (min-width: 860px) { body { padding: 28px; } .shell { min-height: 844px; border-radius: 28px; overflow: hidden; } }
+  .statusbar, .kicker, .meta, .badge, .timer { font-family: var(--mono); }
+  .statusbar { display: flex; justify-content: space-between; padding: 10px 16px 0; font-size: 11px; color: var(--sage); }
+  .shift-pill { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; color: var(--gold-2); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #6d6658; }
+  .dot.on { background: #d7e38a; }
+  .dot.rec { background: #e15a45; box-shadow: 0 0 0 4px rgba(225,90,69,.2); }
+  .switcher { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin: 10px 14px 0; padding: 4px; background: #0c120c; border-radius: 12px; }
+  .switcher button { border: 0; background: transparent; color: var(--sage); border-radius: 9px; padding: 8px 4px; font-weight: 560; }
+  .switcher button.active { background: var(--cream); color: var(--ink); }
+  .screen { display: none; padding: 14px 14px 32px; }
   .screen.active { display: block; }
-  h1 { font-size: 28px; line-height: 1.05; margin: 8px 0 6px; font-weight: 640; letter-spacing: -0.03em; }
-  h2 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.02em; }
-  .sub { color: var(--sage); font-size: 14px; line-height: 1.4; margin: 0 0 14px; }
-  .kicker {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin: 0;
-  }
-
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 12px;
-    margin-bottom: 10px;
-  }
-  .nearby {
-    display: grid;
-    grid-template-columns: 92px 1fr;
-    gap: 10px;
-    background: #24301f;
-    border-color: rgba(201, 151, 42, 0.45);
-  }
-  .nearby img, .site-photo {
-    width: 92px; height: 92px; object-fit: cover; border-radius: 10px;
-  }
-  .meta { font-family: var(--mono); font-size: 11px; color: var(--gold-2); }
+  h1 { font-size: 28px; line-height: 1.05; margin: 8px 0 6px; letter-spacing: -.03em; }
+  .sub, .note { color: var(--sage); font-size: 14px; line-height: 1.4; }
+  .kicker { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px; margin-bottom: 10px; }
+  .nearby { display: grid; grid-template-columns: 92px 1fr; gap: 10px; background: #24301f; border-color: rgba(201,151,42,.45); }
+  .nearby img { width: 92px; height: 92px; object-fit: cover; border-radius: 10px; }
+  .meta { font-size: 11px; color: var(--gold-2); }
   .row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-  .btn {
-    border: 0;
-    border-radius: 12px;
-    padding: 14px 14px;
-    font-size: 16px;
-    font-weight: 640;
-    width: 100%;
-  }
+  .btn { border: 0; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 640; width: 100%; }
   .btn.gold { background: var(--gold); color: #1a1408; }
   .btn.cream { background: var(--cream); color: var(--ink); }
-  .btn.ghost {
-    background: transparent;
-    color: var(--cream);
-    border: 1px solid var(--line);
-  }
+  .btn.ghost { background: transparent; color: var(--cream); border: 1px solid var(--line); }
   .btn.small { width: auto; padding: 8px 12px; font-size: 13px; border-radius: 999px; }
-  .btn:active { transform: translateY(1px); }
-  .stack { display: flex; flex-direction: column; gap: 8px; }
-
-  .search {
-    width: 100%;
-    background: #0c120c;
-    border: 1px solid var(--line);
-    color: var(--cream);
-    border-radius: 12px;
-    padding: 12px 12px;
-    font-size: 16px;
-    margin-bottom: 10px;
-  }
-  .site {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    align-items: center;
-    width: 100%;
-    text-align: left;
-    background: var(--panel);
-    color: var(--cream);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 12px;
-    margin-bottom: 8px;
-  }
-  .site b { display: block; font-size: 16px; }
-  .site span { color: var(--sage); font-size: 13px; }
-  .miles { font-family: var(--mono); font-size: 12px; color: var(--gold-2); }
-
-  .sheet {
-    position: absolute;
-    inset: 0;
-    background: rgba(8, 10, 8, 0.62);
-    display: none;
-    align-items: flex-end;
-    z-index: 5;
-  }
-  .sheet.open { display: flex; }
-  .sheet .panel {
-    background: #f4f1e8;
-    color: var(--ink);
-    width: 100%;
-    border-radius: 22px 22px 0 0;
-    padding: 16px 16px 22px;
-  }
-  .sheet h2 { font-size: 24px; }
-  .handle {
-    width: 42px; height: 4px; border-radius: 4px; background: #cfc6b4; margin: 0 auto 12px;
-  }
-
-  .machine {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    text-align: left;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    background: #121a12;
-    color: var(--cream);
-    padding: 10px 12px;
-    margin-bottom: 6px;
-  }
-  .machine.on { border-color: var(--gold); background: #2a2416; }
-  .prompt {
-    width: 100%;
-    text-align: left;
-    border-radius: 14px;
-    border: 1px solid var(--line);
-    background: #121a12;
-    color: var(--cream);
-    padding: 12px;
-    margin-bottom: 8px;
-  }
-  .prompt .label { font-size: 12px; color: var(--gold-2); font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
-  .prompt p { margin: 4px 0 0; font-size: 15px; }
-  .prompt.done { border-color: rgba(126, 163, 106, 0.7); }
-  .wave { height: 18px; display: flex; align-items: flex-end; gap: 3px; margin-top: 8px; }
-  .wave i {
-    display: block; width: 3px; background: var(--gold); border-radius: 2px;
-    animation: hop 0.8s infinite ease-in-out;
-  }
-  .wave i:nth-child(2) { animation-delay: 0.1s; }
-  .wave i:nth-child(3) { animation-delay: 0.2s; }
-  .wave i:nth-child(4) { animation-delay: 0.3s; }
-  .wave i:nth-child(5) { animation-delay: 0.15s; }
-  @keyframes hop { 50% { height: 16px; } from, to { height: 5px; } }
-
-  .photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .photos button, .photos .shot {
-    border: 1px dashed rgba(238, 243, 232, 0.3);
-    background: #121a12;
-    color: var(--sage);
-    border-radius: 12px;
-    min-height: 92px;
-    overflow: hidden;
-  }
-  .photos img { height: 92px; width: 100%; object-fit: cover; }
-
-  .part {
-    border-left: 3px solid var(--gold);
-    padding: 8px 10px;
-    margin-bottom: 8px;
-    background: #121a12;
-    border-radius: 0 12px 12px 0;
-  }
-  .badge {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-radius: 999px;
-    padding: 3px 7px;
-    background: #2c2618;
-    color: var(--gold-2);
-  }
+  .site, .q { width: 100%; text-align: left; border-radius: 14px; padding: 12px; margin-bottom: 8px; }
+  .site { display: grid; grid-template-columns: 1fr auto; background: var(--panel); color: var(--cream); border: 1px solid var(--line); }
+  .site b, .q b { display: block; font-size: 16px; }
+  .site span, .q span { color: var(--sage); font-size: 13px; }
+  .badge { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: 3px 7px; background: #2c2618; color: var(--gold-2); }
   .badge.new { background: #3a2a22; color: #f0c2a4; }
   .badge.ack { background: #243044; color: #b9d4f5; }
   .badge.ordered { background: #2c2618; color: var(--gold-2); }
-  .badge.received { background: #1d3324; color: #c9e6bf; }
-  .toast {
-    position: absolute;
-    left: 14px; right: 14px; bottom: 16px;
-    background: var(--cream);
-    color: var(--ink);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 14px;
-    display: none;
-    z-index: 6;
+  .badge.bill { background: #2a2438; color: #d9c8f5; }
+  .rec-wrap { display: flex; flex-direction: column; align-items: center; padding: 18px 0 8px; }
+  .rec-btn {
+    width: 92px; height: 92px; border-radius: 50%; border: 0; background: #e15a45;
+    box-shadow: 0 0 0 8px rgba(225,90,69,.18); color: white; font-weight: 640;
   }
+  .rec-btn.stop { border-radius: 18px; width: 74px; height: 74px; background: #e15a45; }
+  .timer { font-size: 32px; letter-spacing: .04em; margin: 12px 0 4px; }
+  .wave { height: 28px; display: flex; align-items: flex-end; gap: 4px; }
+  .wave i { width: 4px; height: 8px; background: #e15a45; border-radius: 2px; animation: hop .7s infinite; }
+  .wave i:nth-child(2) { animation-delay: .1s; } .wave i:nth-child(3) { animation-delay: .2s; }
+  .wave i:nth-child(4) { animation-delay: .05s; } .wave i:nth-child(5) { animation-delay: .18s; }
+  @keyframes hop { 50% { height: 26px; } }
+  .type-link { background: none; border: 0; color: var(--gold-2); font-size: 13px; padding: 8px; }
+  textarea { width: 100%; background: #0c120c; color: var(--cream); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; }
+  .hidden { display: none; }
+  .equip { border-left: 3px solid var(--gold); padding: 8px 10px; margin: 8px 0; background: #121a12; border-radius: 0 12px 12px 0; }
+  .toast { position: absolute; left: 14px; right: 14px; bottom: 16px; background: var(--cream); color: var(--ink); border-radius: 12px; padding: 10px 12px; display: none; z-index: 6; }
   .toast.show { display: block; }
-
-  /* Office + farmer sit on cream when that role is active */
+  .sheet { position: absolute; inset: 0; background: rgba(8,10,8,.62); display: none; align-items: flex-end; z-index: 5; }
+  .sheet.open { display: flex; }
+  .sheet .panel { background: #f4f1e8; color: var(--ink); width: 100%; border-radius: 22px 22px 0 0; padding: 16px 16px 22px; }
+  .handle { width: 42px; height: 4px; border-radius: 4px; background: #cfc6b4; margin: 0 auto 12px; }
   body.office .shell, body.farmer .shell { background: var(--cream); color: var(--ink); }
-  body.office .statusbar, body.farmer .statusbar { color: #5d6b58; }
+  body.office .statusbar, body.farmer .statusbar, body.office .sub, body.farmer .sub, body.office .note, body.farmer .note { color: #5c6958; }
   body.office .switcher, body.farmer .switcher { background: #dce3d4; }
-  body.office .sub, body.farmer .sub { color: #5c6958; }
-  .q {
-    width: 100%;
-    text-align: left;
-    background: white;
-    border: 1px solid #d5ddcc;
-    border-radius: 14px;
-    padding: 12px;
-    margin-bottom: 8px;
-    color: var(--ink);
-  }
-  .q b { display: block; font-size: 16px; }
-  .q span { color: #5c6958; font-size: 13px; }
-  textarea, .field input, .field select {
-    width: 100%;
-    border: 1px solid #d5ddcc;
-    border-radius: 10px;
-    padding: 10px;
-    font-size: 15px;
-    background: white;
-    color: var(--ink);
-  }
-  .status-row { display: flex; flex-wrap: wrap; gap: 6px; }
-  .farmer-hero { border-radius: 16px; overflow: hidden; margin-bottom: 12px; }
-  .farmer-hero img { height: 180px; width: 100%; object-fit: cover; }
-  .note {
-    font-size: 13px;
-    color: var(--sage);
-    line-height: 1.4;
-  }
-  body.office .note, body.farmer .note { color: #5c6958; }
-  .type-link {
-    background: none;
-    border: 0;
-    color: var(--gold-2);
-    font-size: 13px;
-    padding: 4px 0 8px;
-  }
-  .type-box { display: none; margin-bottom: 8px; }
-  .type-box.open { display: block; }
-  .type-box input, .type-box textarea {
-    width: 100%;
-    background: #0c120c;
-    border: 1px solid var(--line);
-    color: var(--cream);
-    border-radius: 12px;
-    padding: 12px;
-    font-size: 16px;
-  }
-  .talk {
-    width: 100%;
-    border: 0;
-    border-radius: 14px;
-    background: var(--gold);
-    color: #1a1408;
-    padding: 16px 14px;
-    font-size: 17px;
-    font-weight: 640;
-    margin-bottom: 6px;
-  }
-  .talk.done { background: #24301f; color: var(--cream); border: 1px solid rgba(126, 163, 106, 0.7); text-align: left; }
+  .q { background: white; border: 1px solid #d5ddcc; color: var(--ink); }
+  .q span { color: #5c6958; }
+  .back { background: none; border: 0; color: var(--gold-2); padding: 0 0 8px; }
   body.office .back, body.farmer .back { color: #6d5420; }
+  #detailNote, #detailEta { background: white; color: var(--ink); border: 1px solid #d5ddcc; width: 100%; border-radius: 10px; padding: 10px; margin-top: 8px; }
 </style>
 </head>
 <body>
-  <div class="shell">
-    <div class="statusbar">
-      <span>4:41</span>
-      <span class="shift-pill"><i class="dot off" id="shiftDot"></i><span id="shiftLabel">Off shift</span></span>
-      <span id="netLabel">Offline queue</span>
-    </div>
-    <div class="switcher">
-      <button id="tabTech" class="active">Tech</button>
-      <button id="tabOffice">Office</button>
-      <button id="tabFarmer">Farmer</button>
-    </div>
-
-    <section class="screen active" id="screenHome">
-      <p class="kicker">Yardline · Grain Handling Direct</p>
-      <h1>Close the yard before you leave it.</h1>
-      <p class="sub">Company Android. The tech talks. Typing is there if the yard is too loud.</p>
-      <div class="card">
-        <div class="row">
-          <div>
-            <b>Erik Larson</b>
-            <div class="note">Dryer service · unit 14</div>
-          </div>
-          <span class="badge">In house</span>
-        </div>
-      </div>
-      <button class="btn gold" id="startShift">Start shift</button>
-      <p class="note" style="margin-top:10px;">Starting a shift keeps a foreground notification up so Android does not kill the yard listener. The Warroad office pin is excluded.</p>
-    </section>
-
-    <section class="screen" id="screenSites">
-      <p class="kicker">Sites on this phone</p>
-      <h1>Pick the yard.</h1>
-      <p class="sub">Say the farm, or type it if you need to. Nearby pin is a prompt, not a tracker.</p>
-      <div class="card nearby" id="nearbyCard">
-        <img src="imagine_images/nscPX.jpg" alt="Nelson yard" />
-        <div>
-          <div class="meta">0.2 mi · pin match</div>
-          <b>Nelson Farm</b>
-          <div class="note">Roseau · dryer and wet bin</div>
-          <button class="btn gold small" id="nearbyStart" style="margin-top:8px;">Start visit</button>
-        </div>
-      </div>
-      <button class="talk" id="sayFarm">Say the farm</button>
-      <button class="type-link" id="typeFarm">Type instead</button>
-      <div class="type-box" id="farmTypeBox">
-        <input class="search" id="siteSearch" placeholder="Type a farm" />
-      </div>
-      <div id="siteList"></div>
-    </section>
-
-    <section class="screen" id="screenVisit">
-      <button class="back" id="leaveVisit">← Sites</button>
-      <p class="kicker" id="visitKicker">Visit open</p>
-      <h1 id="visitTitle">Nelson Farm</h1>
-      <p class="sub" id="visitSub">Roseau · arrived 4:41</p>
-      <p class="kicker">Machine</p>
-      <button class="talk" id="sayMachine">Say the machine</button>
-      <button class="type-link" id="typeMachine">Pick from the list instead</button>
-      <div class="type-box" id="machineTypeBox"><div id="machineList"></div></div>
-      <p class="kicker" style="margin-top:12px;">Talk it through</p>
-      <div class="prompt" data-key="found">
-        <div class="label">What I found</div>
-        <button class="talk" data-rec="found">Tap to talk</button>
-        <p id="txtFound">Stays on the phone until you have a tower.</p>
-        <button class="type-link" data-type="found">Type instead</button>
-        <div class="type-box" id="typeFound"><textarea id="inFound" rows="3" placeholder="Type what you found"></textarea></div>
-      </div>
-      <div class="prompt" data-key="did">
-        <div class="label">What I did</div>
-        <button class="talk" data-rec="did">Tap to talk</button>
-        <p id="txtDid">Tap to talk, or type if the yard is loud.</p>
-        <button class="type-link" data-type="did">Type instead</button>
-        <div class="type-box" id="typeDid"><textarea id="inDid" rows="3" placeholder="Type what you did"></textarea></div>
-      </div>
-      <div class="prompt" data-key="need">
-        <div class="label">What this machine needs</div>
-        <button class="talk" data-rec="need">Tap to talk</button>
-        <p id="txtNeed">This becomes the parts line.</p>
-        <button class="type-link" data-type="need">Type instead</button>
-        <div class="type-box" id="typeNeed"><textarea id="inNeed" rows="3" placeholder="Type the part in plain words"></textarea></div>
-      </div>
-      <p class="kicker">Photos</p>
-      <div class="photos">
-        <button id="addPhoto">+ Nameplate or failed part</button>
-        <div class="shot" id="photoSlot"></div>
-      </div>
-      <p class="kicker" style="margin-top:12px;">Parts lines</p>
-      <div id="partList"></div>
-      <button class="btn ghost" id="addPart">Say a parts line</button>
-      <div style="height:10px;"></div>
-      <button class="btn gold" id="closeVisit">Close visit before leaving</button>
-    </section>
-
-    <section class="screen" id="screenOffice">
-      <p class="kicker">Order fulfillment</p>
-      <h1>Parts queue</h1>
-      <p class="sub">Photo, plain words, machine. No catalog match. Correct the transcript before the farmer sees it.</p>
-      <div id="queue"></div>
-    </section>
-
-    <section class="screen" id="screenOfficeDetail">
-      <button class="back" id="backQueue">← Queue</button>
-      <p class="kicker">Parts line</p>
-      <h1 id="detailTitle">Line</h1>
-      <p class="sub" id="detailSub"></p>
-      <img id="detailImg" alt="" style="height:160px;width:100%;object-fit:cover;border-radius:14px;margin-bottom:10px;" />
-      <p class="kicker">Transcript the tech spoke</p>
-      <textarea id="detailNote" rows="4"></textarea>
-      <p class="note">Saving updates the farmer page. Raw speech does not order anything until you set a status.</p>
-      <div class="status-row" style="margin-top:10px;">
-        <button class="btn cream small" data-status="ack">Acknowledged</button>
-        <button class="btn cream small" data-status="ordered">Ordered</button>
-        <button class="btn cream small" data-status="received">Received</button>
-      </div>
-      <div class="field" style="margin-top:10px;">
-        <input id="detailEta" placeholder="ETA note, optional" />
-      </div>
-    </section>
-
-    <section class="screen" id="screenFarmer">
-      <p class="kicker">Customer link · no login</p>
-      <h1 id="farmerSite">Nelson Farm</h1>
-      <p class="sub">Texted when the visit closes. Prices stay off this page.</p>
-      <div class="farmer-hero"><img src="imagine_images/nscPX.jpg" alt="Yard" /></div>
-      <div class="card" style="background:white;color:var(--ink);border-color:#d5ddcc;">
-        <p class="kicker">Found</p>
-        <p id="farmerFound">Nothing closed yet today.</p>
-        <p class="kicker">Did</p>
-        <p id="farmerDid">—</p>
-      </div>
-      <div id="farmerParts"></div>
-    </section>
-
-    <div class="sheet" id="arriveSheet">
-      <div class="panel">
-        <div class="handle"></div>
-        <p class="kicker">Yard pin</p>
-        <h2 id="arriveTitle">Start visit?</h2>
-        <p id="arriveBody">You are at this site. Office tracking stays off.</p>
-        <div class="stack">
-          <button class="btn gold" id="confirmArrive">Start visit</button>
-          <button class="btn ghost" id="dismissArrive" style="color:var(--ink);border-color:#d5ddcc;">Not this yard</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="sheet" id="partSheet">
-      <div class="panel">
-        <div class="handle"></div>
-        <p class="kicker">Parts line</p>
-        <h2>Say the part.</h2>
-        <p>One sentence: how many, what it is, which machine. Typing is the fallback.</p>
-        <button class="talk" id="sayPart" style="color:#1a1408;">Tap to talk</button>
-        <p id="partHeard" style="min-height:1.2em;"></p>
-        <button class="type-link" id="typePart">Type instead</button>
-        <div class="type-box" id="partTypeBox">
-          <div class="field"><select id="partMachine"></select></div>
-          <div class="field" style="margin-top:8px;"><input id="partWords" placeholder="Plain words. Burner valve sticking." /></div>
-          <div class="field" style="margin-top:8px;"><input id="partQty" placeholder="Qty" value="1" /></div>
-        </div>
-        <div class="stack" style="margin-top:12px;">
-          <button class="btn gold" id="savePart">Queue this line</button>
-          <button class="btn ghost" id="cancelPart" style="color:var(--ink);border-color:#d5ddcc;">Cancel</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="sheet" id="closeSheet">
-      <div class="panel">
-        <div class="handle"></div>
-        <p class="kicker">Leaving the yard</p>
-        <h2>Close this visit?</h2>
-        <p>The record stays on the phone and uploads when the truck hits a tower. Order fulfillment gets the parts lines. The farmer gets the link.</p>
-        <div class="stack">
-          <button class="btn gold" id="confirmClose">Close and queue upload</button>
-          <button class="btn ghost" id="cancelClose" style="color:var(--ink);border-color:#d5ddcc;">Stay on site</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="toast" id="toast"></div>
+<div class="shell">
+  <div class="statusbar">
+    <span>4:56</span>
+    <span class="shift-pill"><i class="dot off" id="shiftDot"></i><span id="shiftLabel">Off shift</span></span>
+    <span id="netLabel">GPS idle</span>
+  </div>
+  <div class="switcher">
+    <button id="tabTech" class="active">Tech</button>
+    <button id="tabOffice">Office</button>
+    <button id="tabFarmer">Farmer</button>
   </div>
 
+  <section class="screen active" id="screenHome">
+    <p class="kicker">Yardline · Grain Handling Direct</p>
+    <h1>One recording. The forms fill themselves.</h1>
+    <p class="sub">He presses record, talks the yard, and the phone pins the site. Ordering and billing get the split-out report.</p>
+    <div class="card"><div class="row"><div><b>Erik Larson</b><div class="note">Dryer service · unit 14</div></div><span class="badge">In house</span></div></div>
+    <button class="btn gold" id="startShift">Start shift</button>
+    <p class="note">Shift on means the phone can ping a yard. The Warroad office pin is excluded.</p>
+  </section>
+
+  <section class="screen" id="screenSites">
+    <p class="kicker">On shift</p>
+    <h1>Press record at the yard.</h1>
+    <p class="sub">Location ping matches the customer. He does not pick a machine first.</p>
+    <div class="card nearby">
+      <img src="imagine_images/nscPX.jpg" alt="Nelson yard" />
+      <div>
+        <div class="meta">GPS ping · 0.2 mi</div>
+        <b>Nelson Farm</b>
+        <div class="note">Customer account on file · Roseau</div>
+        <button class="btn gold small" id="nearbyStart" style="margin-top:8px;">Record here</button>
+      </div>
+    </div>
+    <div id="siteList"></div>
+  </section>
+
+  <section class="screen" id="screenVisit">
+    <button class="back" id="leaveVisit">← Yards</button>
+    <p class="kicker" id="visitKicker">Location pinned</p>
+    <h1 id="visitTitle">Nelson Farm</h1>
+    <p class="sub" id="visitSub">GPS attached to this customer account.</p>
+    <div class="rec-wrap">
+      <div class="timer" id="timer">0:00</div>
+      <div class="wave hidden" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
+      <button class="rec-btn" id="recBtn">Rec</button>
+      <p class="note" id="recHint" style="text-align:center;max-width:280px;">Talk like a voice memo. Where you are, each machine, what you did, what has to happen next.</p>
+    </div>
+    <button class="type-link" id="typeInstead">Type instead</button>
+    <textarea id="typeNote" class="hidden" rows="5" placeholder="If the yard is too loud, type the same thing you would have said."></textarea>
+    <div id="report" class="hidden"></div>
+    <button class="btn gold hidden" id="sendReport">Send forms</button>
+  </section>
+
+  <section class="screen" id="screenOffice">
+    <p class="kicker">Office</p>
+    <h1>Forms from the recording</h1>
+    <p class="sub">One memo becomes a parts form and a billing form. Correct the transcript before the farmer sees it.</p>
+    <div id="queue"></div>
+  </section>
+
+  <section class="screen" id="screenOfficeDetail">
+    <button class="back" id="backQueue">← Forms</button>
+    <p class="kicker" id="detailKind">Form</p>
+    <h1 id="detailTitle">Line</h1>
+    <p class="sub" id="detailSub"></p>
+    <img id="detailImg" alt="" style="height:150px;width:100%;object-fit:cover;border-radius:14px;" />
+    <p class="kicker">Transcript</p>
+    <textarea id="detailNote" rows="4"></textarea>
+    <input id="detailEta" placeholder="ETA or billing note" />
+    <div class="row" style="margin-top:10px;gap:6px;flex-wrap:wrap;">
+      <button class="btn cream small" data-status="ack">Acknowledged</button>
+      <button class="btn cream small" data-status="ordered">Ordered</button>
+      <button class="btn cream small" data-status="bill">Bill hours</button>
+    </div>
+  </section>
+
+  <section class="screen" id="screenFarmer">
+    <p class="kicker">Customer link</p>
+    <h1>Nelson Farm</h1>
+    <p class="sub">What the recording said about his yard. No prices.</p>
+    <img src="imagine_images/nscPX.jpg" alt="Yard" style="height:170px;width:100%;object-fit:cover;border-radius:16px;margin-bottom:10px;" />
+    <div id="farmerBody"><p class="note">Nothing sent yet. Record a visit on the Tech tab.</p></div>
+  </section>
+
+  <div class="sheet" id="arriveSheet">
+    <div class="panel">
+      <div class="handle"></div>
+      <p class="kicker">GPS ping</p>
+      <h2 id="arriveTitle">Nelson Farm</h2>
+      <p id="arriveBody">This pin matches the customer account. Record will attach here.</p>
+      <button class="btn gold" id="confirmArrive">Start recording</button>
+      <button class="btn ghost" id="dismissArrive" style="margin-top:8px;color:var(--ink);border-color:#d5ddcc;">Not this yard</button>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
 <script>
 const sites = [
-  { id: "nelson", name: "Nelson Farm", town: "Roseau", miles: 0.2, photo: "imagine_images/nscPX.jpg",
-    machines: ["GSI 2426 dryer", "Brock 10-inch wet auger", "Westfield transfer"] },
-  { id: "hedlund", name: "Hedlund Yard", town: "Warroad", miles: 11, photo: "searched_images/56q1b.jpg",
-    machines: ["Sukup dryer", "Hutchinson 8-inch incline"] },
-  { id: "olson", name: "Olson Site", town: "Baudette", miles: 28, photo: "searched_images/aRl8T.jpg",
-    machines: ["Deluxe dryer", "Brock bin sweep"] },
-  { id: "berg", name: "Bergstrom Farm", town: "Greenbush", miles: 34, photo: "imagine_images/Hbq61.jpg",
-    machines: ["Mathews dryer", "10-inch unload auger"] },
-  { id: "johnson", name: "Johnson Bin Site", town: "Salol", miles: 18, photo: "imagine_images/nscPX.jpg",
-    machines: ["GSI top-dry", "Sukup fan"] }
+  { id: "nelson", name: "Nelson Farm", town: "Roseau", miles: 0.2, account: "C-1044" },
+  { id: "hedlund", name: "Hedlund Yard", town: "Warroad", miles: 11, account: "C-0881" },
+  { id: "olson", name: "Olson Site", town: "Baudette", miles: 28, account: "C-2210" }
 ];
-
-const spoken = {
-  found: "Burner lights, then drops out after about two minutes. Valve body is wet at the union.",
-  did: "Pulled the burner, cleaned the orifice, taped the leak so he can finish this batch. Not a repair.",
-  need: "Needs a replacement gas valve and a new thermocouple. Photo of the nameplate is on the visit."
-};
-
+const memo = "I'm at Nelson's, dryer and the wet auger. GSI 2426: burner lights then drops out, valve wet at the union. Cleaned the orifice and taped it so he can finish this batch. Needs a gas valve and thermocouple. Brock 10-inch auger: flighting thin at the boot, still moving grain. Don't replace today. Order flighting and come back after harvest. Hour and a half on site.";
 let state = {
-  role: "tech",
-  shift: false,
-  screen: "home",
-  siteId: null,
-  machine: null,
-  notes: { found: "", did: "", need: "" },
-  recording: null,
-  photos: 0,
-  visitOpen: false,
+  shift: false, siteId: null, recording: false, seconds: 0, timer: null, sent: false,
   lines: [
-    { id: "seed1", site: "Hedlund Yard", town: "Warroad", machine: "Sukup dryer", words: "Upper level limit switch cracked. Photo of the housing.", qty: 1, status: "ack", eta: "Vendor says Thursday", img: "imagine_images/HHW3C.jpg", farmer: true },
-    { id: "seed2", site: "Olson Site", town: "Baudette", machine: "Deluxe dryer", words: "Unload flighting worn through at the boot.", qty: 1, status: "new", eta: "", img: "imagine_images/Hbq61.jpg", farmer: false }
+    { id: "seed1", kind: "Parts", site: "Hedlund Yard", machine: "Sukup dryer", words: "Upper level limit switch cracked.", status: "ack", eta: "Thursday", img: "imagine_images/HHW3C.jpg" }
   ]
 };
-
 const $ = (id) => document.getElementById(id);
-
-function toast(msg) {
-  const t = $("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2200);
-}
-
-function renderSites() {
-  const q = $("siteSearch").value.toLowerCase();
-  $("siteList").innerHTML = sites
-    .filter(s => (s.name + s.town).toLowerCase().includes(q))
-    .map(s => `<button class="site" data-site="${s.id}"><div><b>${s.name}</b><span>${s.town}</span></div><span class="miles">${s.miles} mi</span></button>`)
-    .join("");
-}
-
-function openVisit(id) {
-  const site = sites.find(s => s.id === id);
-  state.siteId = id;
-  state.visitOpen = true;
-  state.machine = site.machines[0];
-  state.notes = { found: "", did: "", need: "" };
-  state.photos = 0;
-  $("visitTitle").textContent = site.name;
-  $("visitSub").textContent = site.town + " · arrived 4:41 · saved on phone";
-  $("machineList").innerHTML = site.machines.map(m =>
-    `<button class="machine ${m === state.machine ? "on" : ""}" data-machine="${m}"><span>${m}</span><span class="miles">${m === state.machine ? "on this visit" : ""}</span></button>`
-  ).join("");
-  ["found", "did", "need"].forEach(k => {
-    const cap = k[0].toUpperCase() + k.slice(1);
-    $("txt" + cap).textContent = "Stays on the phone until you have a tower.";
-    $("in" + cap).value = "";
-    document.querySelector(`.prompt[data-key="${k}"]`).classList.remove("done");
-  });
-  $("sayMachine").textContent = "Say the machine";
-  $("sayMachine").classList.remove("done");
-  $("photoSlot").innerHTML = "";
-  renderParts();
-  show("visit");
-  $("arriveSheet").classList.remove("open");
-}
-
-function renderParts() {
-  const mine = state.lines.filter(l => l.site === sites.find(s => s.id === state.siteId)?.name && l.id.startsWith("live"));
-  $("partList").innerHTML = mine.length ? mine.map(l =>
-    `<div class="part"><b>${l.machine}</b><div>${l.qty} · ${l.words}</div><span class="badge ${l.status}">${label(l.status)} · on phone</span></div>`
-  ).join("") : `<p class="note">No parts lines yet. A sentence and a photo is enough.</p>`;
-}
-
-function label(s) {
-  return { new: "New", ack: "Acknowledged", ordered: "Ordered", received: "Received" }[s] || s;
-}
-
-function renderQueue() {
-  $("queue").innerHTML = state.lines.map(l =>
-    `<button class="q" data-line="${l.id}"><div class="row"><b>${l.site}</b><span class="badge ${l.status}">${label(l.status)}</span></div><span>${l.machine} · ${l.words}</span></button>`
-  ).join("");
-}
-
-function renderFarmer() {
-  const siteName = "Nelson Farm";
-  const closed = state.lines.filter(l => l.site === siteName && l.farmer);
-  $("farmerFound").textContent = state.notes.found && state.siteId === "nelson" && !state.visitOpen
-    ? state.notes.found
-    : (closed.length ? "Burner lights, then drops out. Valve body wet at the union." : "No closed visit on this link yet. Finish a Nelson visit on the Tech tab.");
-  $("farmerDid").textContent = state.notes.did && state.siteId === "nelson" && !state.visitOpen
-    ? state.notes.did
-    : (closed.length ? "Cleaned the orifice and taped the leak so this batch can finish." : "—");
-  const lines = state.lines.filter(l => l.site === siteName && l.farmer);
-  $("farmerParts").innerHTML = lines.map(l =>
-    `<div class="card" style="background:white;color:var(--ink);border-color:#d5ddcc;"><div class="row"><b>${l.machine}</b><span class="badge ${l.status}">${label(l.status)}</span></div><p>${l.words}</p><p class="note">${l.eta || "Order fulfillment has not set an ETA."}</p></div>`
-  ).join("") || `<p class="note">Parts show up here after the visit is closed.</p>`;
-}
-
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2200); }
 function show(name) {
-  state.screen = name;
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  const map = { home: "screenHome", sites: "screenSites", visit: "screenVisit", office: "screenOffice", detail: "screenOfficeDetail", farmer: "screenFarmer" };
-  $(map[name]).classList.add("active");
+  $({ sites: "screenSites", visit: "screenVisit", office: "screenOffice", detail: "screenOfficeDetail", farmer: "screenFarmer" }[name] || "screenHome").classList.add("active");
 }
-
 function setRole(role) {
-  state.role = role;
   document.body.classList.remove("office", "farmer");
   if (role !== "tech") document.body.classList.add(role);
-  $("tabTech").classList.toggle("active", role === "tech");
-  $("tabOffice").classList.toggle("active", role === "office");
-  $("tabFarmer").classList.toggle("active", role === "farmer");
-  if (role === "tech") show(state.shift ? (state.visitOpen ? "visit" : "sites") : "home");
+  ["Tech", "Office", "Farmer"].forEach(n => $("tab" + n).classList.toggle("active", n.toLowerCase() === role));
+  if (role === "tech") show(state.shift ? (state.siteId ? "visit" : "sites") : "home");
   if (role === "office") { renderQueue(); show("office"); }
   if (role === "farmer") { renderFarmer(); show("farmer"); }
 }
-
+function renderSites() {
+  $("siteList").innerHTML = sites.map(s => `<button class="site" data-site="${s.id}"><div><b>${s.name}</b><span>${s.town} · ${s.account}</span></div><span class="meta">${s.miles} mi</span></button>`).join("");
+}
+function openVisit(id) {
+  const site = sites.find(s => s.id === id);
+  state.siteId = id;
+  $("visitTitle").textContent = site.name;
+  $("visitSub").textContent = "GPS ping attached to " + site.account + " · " + site.town;
+  $("netLabel").textContent = "Pinned";
+  $("arriveSheet").classList.remove("open");
+  show("visit");
+}
+function clock() {
+  const m = String(Math.floor(state.seconds / 60));
+  const s = String(state.seconds % 60).padStart(2, "0");
+  $("timer").textContent = m + ":" + s;
+}
+function startRec() {
+  state.recording = true;
+  state.seconds = 0;
+  clock();
+  $("recBtn").textContent = "";
+  $("recBtn").classList.add("stop");
+  $("wave").classList.remove("hidden");
+  $("shiftDot").className = "dot rec";
+  $("netLabel").textContent = "Pinging";
+  $("recHint").textContent = "Keep talking. Name each machine. Location stays pinned to this account.";
+  state.timer = setInterval(() => { state.seconds += 1; clock(); }, 1000);
+}
+function stopRec() {
+  state.recording = false;
+  clearInterval(state.timer);
+  $("recBtn").classList.add("hidden");
+  $("wave").classList.add("hidden");
+  $("shiftDot").className = "dot on";
+  $("netLabel").textContent = "Processing";
+  $("recHint").textContent = "Reading the memo and splitting it by machine.";
+  setTimeout(buildReport, 1200);
+}
+function buildReport() {
+  const site = sites.find(s => s.id === state.siteId);
+  const typed = $("typeNote").value.trim();
+  $("netLabel").textContent = "Forms ready";
+  $("recHint").textContent = "One recording covered two machines. Nothing is sent until you confirm.";
+  $("report").classList.remove("hidden");
+  $("sendReport").classList.remove("hidden");
+  $("report").innerHTML = `
+    <p class="kicker">Service report · ${site.account}</p>
+    <div class="card"><div class="meta">GPS · ${site.town} · ${state.seconds || 18}s memo</div><p>${typed || memo}</p></div>
+    <div class="equip"><b>GSI 2426 dryer</b><div>Found: burner drops out, valve wet. Did: cleaned orifice, taped leak. Order: gas valve, thermocouple.</div></div>
+    <div class="equip"><b>Brock 10-inch wet auger</b><div>Found: flighting thin at the boot. Did: left it running. Future: order flighting, return after harvest.</div></div>
+    <div class="card"><b>Billing form</b><div class="note">1.5 hours on site · Erik Larson · not priced on the farmer page.</div></div>
+    <div class="card"><b>Parts form</b><div class="note">Two lines to order fulfillment, tied to the machines above.</div></div>`;
+}
+function sendForms() {
+  const site = sites.find(s => s.id === state.siteId);
+  state.sent = true;
+  state.lines.unshift(
+    { id: "p1", kind: "Parts", site: site.name, machine: "GSI 2426 dryer", words: "Gas valve and thermocouple. Burner drops out.", status: "new", eta: "", img: "imagine_images/HHW3C.jpg" },
+    { id: "p2", kind: "Parts", site: site.name, machine: "Brock 10-inch wet auger", words: "Flighting at the boot. Return after harvest.", status: "new", eta: "", img: "imagine_images/Hbq61.jpg" },
+    { id: "b1", kind: "Billing", site: site.name, machine: "Visit", words: "1.5 hours · Erik Larson · " + site.account, status: "bill", eta: "", img: "imagine_images/nscPX.jpg" }
+  );
+  toast("Parts form to fulfillment. Billing form to the office.");
+  $("sendReport").classList.add("hidden");
+}
+function renderQueue() {
+  $("queue").innerHTML = state.lines.map(l => `<button class="q" data-line="${l.id}"><div class="row"><b>${l.kind} · ${l.site}</b><span class="badge ${l.status}">${l.status}</span></div><span>${l.machine} · ${l.words}</span></button>`).join("");
+}
+function renderFarmer() {
+  const lines = state.lines.filter(l => l.site === "Nelson Farm" && l.kind === "Parts");
+  $("farmerBody").innerHTML = lines.length ? lines.map(l => `<div class="card" style="background:white;color:#101610;border-color:#d5ddcc;"><div class="row"><b>${l.machine}</b><span class="badge ${l.status}">${l.status}</span></div><p>${l.words}</p></div>`).join("") + `<p class="note">Hours are on the billing form. They are not shown here.</p>` : `<p class="note">Nothing sent yet. Record a visit on the Tech tab.</p>`;
+}
 $("startShift").onclick = () => {
   state.shift = true;
   $("shiftDot").className = "dot on";
   $("shiftLabel").textContent = "On shift";
   $("netLabel").textContent = "Listening";
-  toast("Office pin excluded. Watching nearby yards.");
   renderSites();
   show("sites");
-  setTimeout(() => $("arriveSheet").classList.add("open"), 500);
+  setTimeout(() => $("arriveSheet").classList.add("open"), 400);
 };
-
-$("nearbyStart").onclick = () => { $("arriveTitle").textContent = "Nelson Farm"; $("arriveBody").textContent = "Pin match, 0.2 miles. Start the visit?"; $("arriveSheet").classList.add("open"); };
-$("confirmArrive").onclick = () => openVisit("nelson");
-$("dismissArrive").onclick = () => $("arriveSheet").classList.remove("open");
-
-$("siteSearch").oninput = renderSites;
+$("nearbyStart").onclick = () => { $("arriveSheet").dataset.site = "nelson"; $("arriveSheet").classList.add("open"); };
 $("siteList").onclick = (e) => {
   const btn = e.target.closest("[data-site]");
   if (!btn) return;
   const site = sites.find(s => s.id === btn.dataset.site);
   $("arriveTitle").textContent = site.name;
-  $("arriveBody").textContent = site.town + " · chosen from the full list, not dispatched.";
+  $("arriveBody").textContent = "GPS will pin " + site.account + " when recording starts.";
   $("arriveSheet").dataset.site = site.id;
   $("arriveSheet").classList.add("open");
 };
-$("confirmArrive").onclick = () => openVisit($("arriveSheet").dataset.site || "nelson");
-
-$("typeFarm").onclick = () => $("farmTypeBox").classList.toggle("open");
-$("sayFarm").onclick = () => {
-  if (state.recording) return;
-  state.recording = "farm";
-  $("sayFarm").textContent = "Listening…";
-  setTimeout(() => {
-    $("siteSearch").value = "Hedlund";
-    $("farmTypeBox").classList.add("open");
-    renderSites();
-    $("sayFarm").textContent = "Heard: Hedlund";
-    state.recording = null;
-    toast("Matched Hedlund Yard. Tap it, or talk again.");
-  }, 900);
-};
-
-$("sayMachine").onclick = () => {
-  const site = sites.find(s => s.id === state.siteId);
-  if (!site || state.recording) return;
-  state.recording = "machine";
-  $("sayMachine").textContent = "Listening…";
-  setTimeout(() => {
-    const heard = site.machines.find(m => /auger/i.test(m)) || site.machines[0];
-    state.machine = heard;
-    $("sayMachine").textContent = heard;
-    $("sayMachine").classList.add("done");
-    $("machineTypeBox").classList.add("open");
-    document.querySelectorAll(".machine").forEach(m => m.classList.toggle("on", m.dataset.machine === heard));
-    state.recording = null;
-    toast("Machine set from speech. List is there if it heard wrong.");
-  }, 900);
-};
-$("typeMachine").onclick = () => $("machineTypeBox").classList.toggle("open");
-
-$("machineList").onclick = (e) => {
-  const btn = e.target.closest("[data-machine]");
-  if (!btn) return;
-  state.machine = btn.dataset.machine;
-  document.querySelectorAll(".machine").forEach(m => m.classList.toggle("on", m.dataset.machine === state.machine));
-  $("sayMachine").textContent = state.machine;
-  $("sayMachine").classList.add("done");
-};
-
-document.querySelectorAll("[data-rec]").forEach(btn => {
-  btn.onclick = () => {
-    const key = btn.dataset.rec;
-    if (state.recording) return;
-    state.recording = key;
-    btn.textContent = "Listening…";
-    const cap = key[0].toUpperCase() + key.slice(1);
-    $("txt" + cap).innerHTML = `Recording<div class="wave"><i></i><i></i><i></i><i></i><i></i></div>`;
-    setTimeout(() => {
-      state.notes[key] = spoken[key];
-      $("txt" + cap).textContent = spoken[key];
-      $("in" + cap).value = spoken[key];
-      btn.textContent = "Talk again";
-      btn.closest(".prompt").classList.add("done");
-      state.recording = null;
-      toast("Saved on phone. Will upload with the visit.");
-    }, 1100);
-  };
-});
-document.querySelectorAll("[data-type]").forEach(btn => {
-  btn.onclick = () => {
-    const key = btn.dataset.type;
-    const cap = key[0].toUpperCase() + key.slice(1);
-    $("type" + cap).classList.toggle("open");
-  };
-});
-["found", "did", "need"].forEach(key => {
-  const cap = key[0].toUpperCase() + key.slice(1);
-  $("in" + cap).oninput = () => {
-    state.notes[key] = $("in" + cap).value;
-    $("txt" + cap).textContent = state.notes[key] || "Typed note stays on the phone.";
-  };
-});
-
-$("addPhoto").onclick = () => {
-  state.photos += 1;
-  $("photoSlot").innerHTML = `<img src="imagine_images/HHW3C.jpg" alt="Part photo" />`;
-  toast("Photo queued offline.");
-};
-
-$("addPart").onclick = () => {
-  const site = sites.find(s => s.id === state.siteId);
-  $("partMachine").innerHTML = site.machines.map(m => `<option ${m === state.machine ? "selected" : ""}>${m}</option>`).join("");
-  $("partWords").value = state.notes.need || "";
-  $("partHeard").textContent = "";
-  $("sayPart").textContent = "Tap to talk";
-  $("partSheet").classList.add("open");
-};
-$("typePart").onclick = () => $("partTypeBox").classList.toggle("open");
-$("sayPart").onclick = () => {
-  if (state.recording) return;
-  state.recording = "part";
-  $("sayPart").textContent = "Listening…";
-  setTimeout(() => {
-    const site = sites.find(s => s.id === state.siteId);
-    const words = state.notes.need || spoken.need;
-    $("partWords").value = words;
-    $("partQty").value = "1";
-    if (state.machine) $("partMachine").value = state.machine;
-    $("partHeard").textContent = "Heard: 1 · " + (state.machine || site.machines[0]) + " · " + words;
-    $("sayPart").textContent = "Talk again";
-    state.recording = null;
-    toast("Line heard. Queue it, or type if it heard wrong.");
-  }, 1000);
-};
-$("cancelPart").onclick = () => $("partSheet").classList.remove("open");
-$("savePart").onclick = () => {
-  const site = sites.find(s => s.id === state.siteId);
-  const words = ($("partWords").value || $("partHeard").textContent || state.notes.need).trim();
-  if (!words) { toast("Say the part, or type it."); return; }
-  state.lines.unshift({
-    id: "live" + Date.now(),
-    site: site.name,
-    town: site.town,
-    machine: $("partMachine").value || state.machine || site.machines[0],
-    words: words.replace(/^Heard: \d+ · [^·]+ · /, ""),
-    qty: $("partQty").value || "1",
-    status: "new",
-    eta: "",
-    img: "imagine_images/HHW3C.jpg",
-    farmer: false
-  });
-  $("partSheet").classList.remove("open");
-  renderParts();
-  toast("Line on the phone. Not visible to the office until close.");
-};
-
-$("closeVisit").onclick = () => $("closeSheet").classList.add("open");
-$("cancelClose").onclick = () => $("closeSheet").classList.remove("open");
-$("confirmClose").onclick = () => {
-  state.lines.forEach(l => { if (l.site === sites.find(s => s.id === state.siteId).name && l.id.startsWith("live")) l.farmer = true; });
-  if (!state.lines.some(l => l.site === "Nelson Farm" && l.id.startsWith("live")) && state.siteId === "nelson") {
-    state.lines.unshift({
-      id: "live" + Date.now(),
-      site: "Nelson Farm",
-      town: "Roseau",
-      machine: state.machine,
-      words: state.notes.need || spoken.need,
-      qty: 1,
-      status: "new",
-      eta: "",
-      img: "imagine_images/HHW3C.jpg",
-      farmer: true
-    });
-  }
-  state.visitOpen = false;
-  $("closeSheet").classList.remove("open");
-  $("netLabel").textContent = "Queued";
-  toast("Closed. Upload queued until the next tower.");
-  setTimeout(() => { $("netLabel").textContent = "Synced"; toast("Tower hit. Order fulfillment has the lines."); }, 1200);
-  show("sites");
-};
-
-$("leaveVisit").onclick = () => { toast("Visit still open on the phone."); show("sites"); };
-
+$("confirmArrive").onclick = () => { openVisit($("arriveSheet").dataset.site || "nelson"); startRec(); };
+$("dismissArrive").onclick = () => $("arriveSheet").classList.remove("open");
+$("recBtn").onclick = () => state.recording ? stopRec() : startRec();
+$("typeInstead").onclick = () => $("typeNote").classList.toggle("hidden");
+$("sendReport").onclick = sendForms;
+$("leaveVisit").onclick = () => show("sites");
 $("queue").onclick = (e) => {
   const btn = e.target.closest("[data-line]");
   if (!btn) return;
   const line = state.lines.find(l => l.id === btn.dataset.line);
   state.detail = line.id;
+  $("detailKind").textContent = line.kind;
   $("detailTitle").textContent = line.site;
-  $("detailSub").textContent = line.machine + " · qty " + line.qty;
+  $("detailSub").textContent = line.machine;
   $("detailNote").value = line.words;
   $("detailEta").value = line.eta || "";
   $("detailImg").src = line.img;
   show("detail");
 };
 $("backQueue").onclick = () => { renderQueue(); show("office"); };
-$("detailNote").onchange = () => {
+document.querySelectorAll("[data-status]").forEach(btn => btn.onclick = () => {
   const line = state.lines.find(l => l.id === state.detail);
+  line.status = btn.dataset.status;
   line.words = $("detailNote").value;
-  toast("Transcript corrected.");
-};
-document.querySelectorAll("[data-status]").forEach(btn => {
-  btn.onclick = () => {
-    const line = state.lines.find(l => l.id === state.detail);
-    line.status = btn.dataset.status;
-    line.eta = $("detailEta").value;
-    line.farmer = true;
-    toast(label(line.status) + ". Farmer page updated.");
-    renderQueue();
-  };
+  line.eta = $("detailEta").value;
+  toast("Form updated.");
 });
-
 $("tabTech").onclick = () => setRole("tech");
 $("tabOffice").onclick = () => setRole("office");
 $("tabFarmer").onclick = () => setRole("farmer");
