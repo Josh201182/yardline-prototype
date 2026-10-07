@@ -325,13 +325,36 @@
     line-height: 1.4;
   }
   body.office .note, body.farmer .note { color: #5c6958; }
-  .back {
-    background: transparent;
+  .type-link {
+    background: none;
     border: 0;
     color: var(--gold-2);
-    padding: 0 0 8px;
-    font-size: 14px;
+    font-size: 13px;
+    padding: 4px 0 8px;
   }
+  .type-box { display: none; margin-bottom: 8px; }
+  .type-box.open { display: block; }
+  .type-box input, .type-box textarea {
+    width: 100%;
+    background: #0c120c;
+    border: 1px solid var(--line);
+    color: var(--cream);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 16px;
+  }
+  .talk {
+    width: 100%;
+    border: 0;
+    border-radius: 14px;
+    background: var(--gold);
+    color: #1a1408;
+    padding: 16px 14px;
+    font-size: 17px;
+    font-weight: 640;
+    margin-bottom: 6px;
+  }
+  .talk.done { background: #24301f; color: var(--cream); border: 1px solid rgba(126, 163, 106, 0.7); text-align: left; }
   body.office .back, body.farmer .back { color: #6d5420; }
 </style>
 </head>
@@ -351,7 +374,7 @@
     <section class="screen active" id="screenHome">
       <p class="kicker">Yardline · Grain Handling Direct</p>
       <h1>Close the yard before you leave it.</h1>
-      <p class="sub">Company Android. Full site list on the phone. Parts queue only — photo, plain words, which machine.</p>
+      <p class="sub">Company Android. The tech talks. Typing is there if the yard is too loud.</p>
       <div class="card">
         <div class="row">
           <div>
@@ -368,7 +391,7 @@
     <section class="screen" id="screenSites">
       <p class="kicker">Sites on this phone</p>
       <h1>Pick the yard.</h1>
-      <p class="sub">Nearby pin is a prompt, not a tracker. Any customer site can be started by hand.</p>
+      <p class="sub">Say the farm, or type it if you need to. Nearby pin is a prompt, not a tracker.</p>
       <div class="card nearby" id="nearbyCard">
         <img src="imagine_images/nscPX.jpg" alt="Nelson yard" />
         <div>
@@ -378,7 +401,11 @@
           <button class="btn gold small" id="nearbyStart" style="margin-top:8px;">Start visit</button>
         </div>
       </div>
-      <input class="search" id="siteSearch" placeholder="Search farms" />
+      <button class="talk" id="sayFarm">Say the farm</button>
+      <button class="type-link" id="typeFarm">Type instead</button>
+      <div class="type-box" id="farmTypeBox">
+        <input class="search" id="siteSearch" placeholder="Type a farm" />
+      </div>
       <div id="siteList"></div>
     </section>
 
@@ -388,11 +415,31 @@
       <h1 id="visitTitle">Nelson Farm</h1>
       <p class="sub" id="visitSub">Roseau · arrived 4:41</p>
       <p class="kicker">Machine</p>
-      <div id="machineList"></div>
+      <button class="talk" id="sayMachine">Say the machine</button>
+      <button class="type-link" id="typeMachine">Pick from the list instead</button>
+      <div class="type-box" id="machineTypeBox"><div id="machineList"></div></div>
       <p class="kicker" style="margin-top:12px;">Talk it through</p>
-      <button class="prompt" data-key="found"><div class="label">What I found</div><p id="txtFound">Tap to record. Stays on the phone until you have a tower.</p></button>
-      <button class="prompt" data-key="did"><div class="label">What I did</div><p id="txtDid">Tap to record.</p></button>
-      <button class="prompt" data-key="need"><div class="label">What this machine needs</div><p id="txtNeed">Tap to record. This becomes the parts lines.</p></button>
+      <div class="prompt" data-key="found">
+        <div class="label">What I found</div>
+        <button class="talk" data-rec="found">Tap to talk</button>
+        <p id="txtFound">Stays on the phone until you have a tower.</p>
+        <button class="type-link" data-type="found">Type instead</button>
+        <div class="type-box" id="typeFound"><textarea id="inFound" rows="3" placeholder="Type what you found"></textarea></div>
+      </div>
+      <div class="prompt" data-key="did">
+        <div class="label">What I did</div>
+        <button class="talk" data-rec="did">Tap to talk</button>
+        <p id="txtDid">Tap to talk, or type if the yard is loud.</p>
+        <button class="type-link" data-type="did">Type instead</button>
+        <div class="type-box" id="typeDid"><textarea id="inDid" rows="3" placeholder="Type what you did"></textarea></div>
+      </div>
+      <div class="prompt" data-key="need">
+        <div class="label">What this machine needs</div>
+        <button class="talk" data-rec="need">Tap to talk</button>
+        <p id="txtNeed">This becomes the parts line.</p>
+        <button class="type-link" data-type="need">Type instead</button>
+        <div class="type-box" id="typeNeed"><textarea id="inNeed" rows="3" placeholder="Type the part in plain words"></textarea></div>
+      </div>
       <p class="kicker">Photos</p>
       <div class="photos">
         <button id="addPhoto">+ Nameplate or failed part</button>
@@ -400,7 +447,7 @@
       </div>
       <p class="kicker" style="margin-top:12px;">Parts lines</p>
       <div id="partList"></div>
-      <button class="btn ghost" id="addPart">Add a parts line</button>
+      <button class="btn ghost" id="addPart">Say a parts line</button>
       <div style="height:10px;"></div>
       <button class="btn gold" id="closeVisit">Close visit before leaving</button>
     </section>
@@ -462,10 +509,16 @@
       <div class="panel">
         <div class="handle"></div>
         <p class="kicker">Parts line</p>
-        <h2>What does it need?</h2>
-        <div class="field"><select id="partMachine"></select></div>
-        <div class="field" style="margin-top:8px;"><input id="partWords" placeholder="Plain words. Burner valve sticking." /></div>
-        <div class="field" style="margin-top:8px;"><input id="partQty" placeholder="Qty" value="1" /></div>
+        <h2>Say the part.</h2>
+        <p>One sentence: how many, what it is, which machine. Typing is the fallback.</p>
+        <button class="talk" id="sayPart" style="color:#1a1408;">Tap to talk</button>
+        <p id="partHeard" style="min-height:1.2em;"></p>
+        <button class="type-link" id="typePart">Type instead</button>
+        <div class="type-box" id="partTypeBox">
+          <div class="field"><select id="partMachine"></select></div>
+          <div class="field" style="margin-top:8px;"><input id="partWords" placeholder="Plain words. Burner valve sticking." /></div>
+          <div class="field" style="margin-top:8px;"><input id="partQty" placeholder="Qty" value="1" /></div>
+        </div>
         <div class="stack" style="margin-top:12px;">
           <button class="btn gold" id="savePart">Queue this line</button>
           <button class="btn ghost" id="cancelPart" style="color:var(--ink);border-color:#d5ddcc;">Cancel</button>
@@ -555,9 +608,13 @@ function openVisit(id) {
     `<button class="machine ${m === state.machine ? "on" : ""}" data-machine="${m}"><span>${m}</span><span class="miles">${m === state.machine ? "on this visit" : ""}</span></button>`
   ).join("");
   ["found", "did", "need"].forEach(k => {
-    $("txt" + k[0].toUpperCase() + k.slice(1)).textContent = k === "found" ? "Tap to record. Stays on the phone until you have a tower." : "Tap to record.";
+    const cap = k[0].toUpperCase() + k.slice(1);
+    $("txt" + cap).textContent = "Stays on the phone until you have a tower.";
+    $("in" + cap).value = "";
     document.querySelector(`.prompt[data-key="${k}"]`).classList.remove("done");
   });
+  $("sayMachine").textContent = "Say the machine";
+  $("sayMachine").classList.remove("done");
   $("photoSlot").innerHTML = "";
   renderParts();
   show("visit");
@@ -642,26 +699,79 @@ $("siteList").onclick = (e) => {
 };
 $("confirmArrive").onclick = () => openVisit($("arriveSheet").dataset.site || "nelson");
 
+$("typeFarm").onclick = () => $("farmTypeBox").classList.toggle("open");
+$("sayFarm").onclick = () => {
+  if (state.recording) return;
+  state.recording = "farm";
+  $("sayFarm").textContent = "Listening…";
+  setTimeout(() => {
+    $("siteSearch").value = "Hedlund";
+    $("farmTypeBox").classList.add("open");
+    renderSites();
+    $("sayFarm").textContent = "Heard: Hedlund";
+    state.recording = null;
+    toast("Matched Hedlund Yard. Tap it, or talk again.");
+  }, 900);
+};
+
+$("sayMachine").onclick = () => {
+  const site = sites.find(s => s.id === state.siteId);
+  if (!site || state.recording) return;
+  state.recording = "machine";
+  $("sayMachine").textContent = "Listening…";
+  setTimeout(() => {
+    const heard = site.machines.find(m => /auger/i.test(m)) || site.machines[0];
+    state.machine = heard;
+    $("sayMachine").textContent = heard;
+    $("sayMachine").classList.add("done");
+    $("machineTypeBox").classList.add("open");
+    document.querySelectorAll(".machine").forEach(m => m.classList.toggle("on", m.dataset.machine === heard));
+    state.recording = null;
+    toast("Machine set from speech. List is there if it heard wrong.");
+  }, 900);
+};
+$("typeMachine").onclick = () => $("machineTypeBox").classList.toggle("open");
+
 $("machineList").onclick = (e) => {
   const btn = e.target.closest("[data-machine]");
   if (!btn) return;
   state.machine = btn.dataset.machine;
   document.querySelectorAll(".machine").forEach(m => m.classList.toggle("on", m.dataset.machine === state.machine));
+  $("sayMachine").textContent = state.machine;
+  $("sayMachine").classList.add("done");
 };
 
-document.querySelectorAll(".prompt").forEach(btn => {
+document.querySelectorAll("[data-rec]").forEach(btn => {
   btn.onclick = () => {
-    const key = btn.dataset.key;
+    const key = btn.dataset.rec;
     if (state.recording) return;
     state.recording = key;
-    btn.querySelector("p").innerHTML = `Recording<div class="wave"><i></i><i></i><i></i><i></i><i></i></div>`;
+    btn.textContent = "Listening…";
+    const cap = key[0].toUpperCase() + key.slice(1);
+    $("txt" + cap).innerHTML = `Recording<div class="wave"><i></i><i></i><i></i><i></i><i></i></div>`;
     setTimeout(() => {
       state.notes[key] = spoken[key];
-      btn.querySelector("p").textContent = spoken[key];
-      btn.classList.add("done");
+      $("txt" + cap).textContent = spoken[key];
+      $("in" + cap).value = spoken[key];
+      btn.textContent = "Talk again";
+      btn.closest(".prompt").classList.add("done");
       state.recording = null;
       toast("Saved on phone. Will upload with the visit.");
     }, 1100);
+  };
+});
+document.querySelectorAll("[data-type]").forEach(btn => {
+  btn.onclick = () => {
+    const key = btn.dataset.type;
+    const cap = key[0].toUpperCase() + key.slice(1);
+    $("type" + cap).classList.toggle("open");
+  };
+});
+["found", "did", "need"].forEach(key => {
+  const cap = key[0].toUpperCase() + key.slice(1);
+  $("in" + cap).oninput = () => {
+    state.notes[key] = $("in" + cap).value;
+    $("txt" + cap).textContent = state.notes[key] || "Typed note stays on the phone.";
   };
 });
 
@@ -675,19 +785,38 @@ $("addPart").onclick = () => {
   const site = sites.find(s => s.id === state.siteId);
   $("partMachine").innerHTML = site.machines.map(m => `<option ${m === state.machine ? "selected" : ""}>${m}</option>`).join("");
   $("partWords").value = state.notes.need || "";
+  $("partHeard").textContent = "";
+  $("sayPart").textContent = "Tap to talk";
   $("partSheet").classList.add("open");
+};
+$("typePart").onclick = () => $("partTypeBox").classList.toggle("open");
+$("sayPart").onclick = () => {
+  if (state.recording) return;
+  state.recording = "part";
+  $("sayPart").textContent = "Listening…";
+  setTimeout(() => {
+    const site = sites.find(s => s.id === state.siteId);
+    const words = state.notes.need || spoken.need;
+    $("partWords").value = words;
+    $("partQty").value = "1";
+    if (state.machine) $("partMachine").value = state.machine;
+    $("partHeard").textContent = "Heard: 1 · " + (state.machine || site.machines[0]) + " · " + words;
+    $("sayPart").textContent = "Talk again";
+    state.recording = null;
+    toast("Line heard. Queue it, or type if it heard wrong.");
+  }, 1000);
 };
 $("cancelPart").onclick = () => $("partSheet").classList.remove("open");
 $("savePart").onclick = () => {
   const site = sites.find(s => s.id === state.siteId);
-  const words = $("partWords").value.trim();
-  if (!words) { toast("Plain words required."); return; }
+  const words = ($("partWords").value || $("partHeard").textContent || state.notes.need).trim();
+  if (!words) { toast("Say the part, or type it."); return; }
   state.lines.unshift({
     id: "live" + Date.now(),
     site: site.name,
     town: site.town,
-    machine: $("partMachine").value,
-    words,
+    machine: $("partMachine").value || state.machine || site.machines[0],
+    words: words.replace(/^Heard: \d+ · [^·]+ · /, ""),
     qty: $("partQty").value || "1",
     status: "new",
     eta: "",
