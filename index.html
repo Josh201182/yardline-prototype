@@ -132,6 +132,7 @@
       <div class="wave hidden" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
       <button class="rec-btn" id="recBtn">Rec</button>
       <p class="note" id="recHint" style="text-align:center;max-width:280px;">Talk like a voice memo. Where you are, each machine, what you did, what has to happen next.</p>
+      <button class="btn gold hidden" id="stopBtn" style="margin-top:14px;">Stop and add photos</button>
     </div>
     <button class="type-link" id="typeInstead">Type instead</button>
     <textarea id="typeNote" class="hidden" rows="5" placeholder="If the yard is too loud, type the same thing you would have said."></textarea>
@@ -139,7 +140,15 @@
     <button class="btn gold hidden" id="sendReport">Send forms</button>
   </section>
 
-  <section class="screen" id="screenOffice">
+  <section class="screen" id="screenMedia">
+    <p class="kicker">Recording saved</p>
+    <h1>Add pictures or video.</h1>
+    <p class="sub">This comes up every time a recording stops. Nameplate, failed part, or a walk-around.</p>
+    <div id="mediaShots" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;"></div>
+    <button class="btn gold" id="addPhoto">Upload photo</button>
+    <button class="btn ghost" id="addVideo" style="margin-top:8px;">Upload video</button>
+    <button class="btn cream" id="skipMedia" style="margin-top:8px;">Done, fill the forms</button>
+  </section>
     <p class="kicker">Office</p>
     <h1>Forms from the recording</h1>
     <p class="sub">One memo becomes a parts form and a billing form. Correct the transcript before the farmer sees it.</p>
@@ -211,7 +220,7 @@ const $ = (id) => document.getElementById(id);
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2200); }
 function show(name) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  $({ sites: "screenSites", visit: "screenVisit", office: "screenOffice", detail: "screenOfficeDetail", farmer: "screenFarmer" }[name] || "screenHome").classList.add("active");
+  $({ sites: "screenSites", visit: "screenVisit", media: "screenMedia", office: "screenOffice", detail: "screenOfficeDetail", farmer: "screenFarmer" }[name] || "screenHome").classList.add("active");
 }
 function setRole(role) {
   document.body.classList.remove("office", "farmer");
@@ -244,6 +253,7 @@ function startRec() {
   clock();
   $("recBtn").textContent = "";
   $("recBtn").classList.add("stop");
+  $("stopBtn").classList.remove("hidden");
   $("wave").classList.remove("hidden");
   $("shiftDot").className = "dot rec";
   $("netLabel").textContent = "Pinging";
@@ -253,19 +263,16 @@ function startRec() {
 function stopRec() {
   state.recording = false;
   clearInterval(state.timer);
-  $("recBtn").classList.add("hidden");
-  $("wave").classList.add("hidden");
   $("shiftDot").className = "dot on";
   $("netLabel").textContent = "Memo saved";
-  $("recHint").textContent = "Recording is on the phone. Add site photos or video before the forms fill.";
   $("mediaShots").innerHTML = "";
-  $("mediaSheet").classList.add("open");
+  show("media");
 }
 function finishMedia() {
-  $("mediaSheet").classList.remove("open");
   $("netLabel").textContent = "Processing";
+  show("visit");
   $("recHint").textContent = "Reading the memo and splitting it by machine.";
-  setTimeout(buildReport, 900);
+  setTimeout(buildReport, 700);
 }
 function buildReport() {
   const site = sites.find(s => s.id === state.siteId);
@@ -322,6 +329,7 @@ $("siteList").onclick = (e) => {
 $("confirmArrive").onclick = () => { openVisit($("arriveSheet").dataset.site || "nelson"); startRec(); };
 $("dismissArrive").onclick = () => $("arriveSheet").classList.remove("open");
 $("recBtn").onclick = () => state.recording ? stopRec() : startRec();
+$("stopBtn").onclick = () => { if (state.recording) stopRec(); };
 $("addPhoto").onclick = () => {
   $("mediaShots").insertAdjacentHTML("beforeend", `<img src="imagine_images/HHW3C.jpg" alt="Site photo" style="height:92px;width:100%;object-fit:cover;border-radius:10px;" />`);
   toast("Photo attached to this visit.");
